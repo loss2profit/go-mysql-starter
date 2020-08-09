@@ -1,0 +1,58 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+type Site struct {
+	ID        int     `json:"id"`
+	NAME      string  `json:"name"`
+	LATITUDE  float32 `json:"latitude"`
+	LONGITUDE float32 `json:"longitude"`
+	STATUS    float32 `json:"status"`
+}
+
+func main() {
+	fmt.Println("Go MySQL Tutorial")
+
+	// Open up our database connection.
+	// I've set up a database on my local machine using phpmyadmin.
+	// The database is called testDb
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/Atlas")
+
+	// if there is an error opening the connection, handle it
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// defer the close till after the main function has finished
+	// executing
+	defer db.Close()
+
+	//Perform insert query
+	results, err := db.Query("SELECT ID,NAME,LATITUDE,LONGITUDE,STATUS FROM SITE")
+
+	// if there is an error inserting, handle it
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for results.Next() {
+		var site Site
+		// for each row, scan the result into our tag composite object
+		err = results.Scan(&site.ID, &site.NAME, &site.LATITUDE, &site.LONGITUDE, &site.STATUS)
+		if err != nil {
+			panic(err.Error()) // proper error handling instead of panic in your app
+		}
+		// and then print out the tag's Name attribute
+		log.Print(site)
+	}
+
+	// be careful deferring Queries if you are using transactions
+	defer results.Close()
+
+}
